@@ -3,6 +3,31 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 from django.utils import timezone
 
 
+class UserManager(BaseUserManager):
+    """Manager class for Custom User model"""
+    def create_user(self, email, first_name, last_name, password=None):
+        if not email:
+            raise ValueError('Users must have an email address.')
+        user = self.model(email=self.normalize_email(email),
+                          first_name=first_name,
+                          last_name=last_name)
+        user.set_password(password)
+        user.save(using=self._db)
+
+        return user
+
+    def create_superuser(self,email, first_name, last_name, password=None ):
+        user = self.create_user(email,first_name,last_name, password)
+
+        user.is_staff = True
+        user.is_superuser = True
+        user.is_subscribed=True
+
+        user.save(using=self._db)
+
+        return user
+
+
 # Create your models here.
 class CustomUser(AbstractUser):
     """
@@ -15,9 +40,8 @@ class CustomUser(AbstractUser):
     is_superuser = models.BooleanField(verbose_name='Is this user a super user', default=False)
     is_active = models.BooleanField(default=True)
     is_subscribed = models.BooleanField(default=False)
-    date_joined = models.DateTimeField(verbose_name='Date joined',default=timezone.now() )
 
     USERNAME_FIELD = 'email'
     EMAIL_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'email']
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
